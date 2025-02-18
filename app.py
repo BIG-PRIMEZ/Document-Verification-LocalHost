@@ -8,24 +8,24 @@ from web3 import Web3
 
 # Load the contract ABI
 with open("artifacts/contracts/DocumentVerification.sol/DocumentVerification.json", "r") as f:
-    CONTRACT_ABI = json.load(f)["abi"]
-    print(f"{CONTRACT_ABI}")
+    contract_abi = json.load(f)["abi"]
 
 # Blockchain configuration
-LOCAL_NODE_URL = "http://127.0.0.1:8545"  # Local node URL
-CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F"  # Replace with your contract address
-PRIVATE_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"  # Replace with your private key
-ACCOUNT_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"  # Replace with your account address
+local_node_url = "http://127.0.0.1:8545"  # Local node URL
+contract_address = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"  # Replace with your contract address
+private_key = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"  # Replace with your private key
+account_address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"  # Replace with your account address
 
 # Connect to the Ethereum node
-web3 = Web3(Web3.HTTPProvider(LOCAL_NODE_URL))
+web3 = Web3(Web3.HTTPProvider(local_node_url))
 if web3.is_connected():
     print("Connected to Ethereum node")
 else:
     print("Failed to connect to Ethereum node")
 
 # Create contract instance
-contract = web3.eth.contract(address=CONTRACT_ADDRESS, abi=CONTRACT_ABI)
+Contract = web3.eth.contract(address=contract_address, abi=contract_abi)
+print(f"{Contract}")
 
 # OCR Function for Images
 def extract_text_from_image(image_path):
@@ -53,30 +53,30 @@ def generate_hash(text):
 
 # Store Hash on Blockchain
 def store_hash_on_blockchain(hash_value):
-    nonce = web3.eth.get_transaction_count(ACCOUNT_ADDRESS)
+    nonce = web3.eth.get_transaction_count(account_address)
 
     print(f"📝 Storing Hash: {hash_value}")  # Debug print
 
-    txn = contract.functions.storeHash(hash_value).build_transaction({
+    txn = Contract.functions.storeHash(hash_value).build_transaction({
         "chainId": 1337,  # Hardhat network
         "gas": 2000000,
         "gasPrice": web3.to_wei("50", "gwei"),
         "nonce": nonce,
     })
 
-    signed_txn = web3.eth.account.sign_transaction(txn, private_key=PRIVATE_KEY)
-    txn_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    signed_txn = web3.eth.account.sign_transaction(txn, private_key=private_key)
+    txn_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
     txn_receipt = web3.eth.wait_for_transaction_receipt(txn_hash)
 
     if txn_receipt.status == 1:
         print(f"✅ Hash stored successfully! Transaction Hash: {web3.to_hex(txn_hash)}")
 
         # Confirm that the hash count has increased
-        total_hashes = contract.functions.hashCount().call()
+        total_hashes = Contract.functions.hashCount().call()
         print(f"🔍 Updated Total Hashes on Blockchain: {total_hashes}")
 
         # Fetch and verify stored hash
-        stored_hash = contract.functions.getHash(total_hashes - 1).call()
+        stored_hash = Contract.functions.getHash(total_hashes - 1).call()
         print(f"📦 Last Stored Hash: {stored_hash}")
 
         return True
@@ -103,17 +103,19 @@ def verify_document(file_path):
     print(f"📄 Extracted Text: {extracted_text[:100]}...")  # Debug: Show part of extracted text
     print(f"🔢 Generated Hash: {current_hash}")
 
-    # Get number of stored hashes from blockchain
-    total_hashes = contract.functions.hashCount().call()
-    print(f"🔍 Total Hashes on Blockchain: {total_hashes}")
+    store_blockchain = store_hash_on_blockchain(current_hash)
+    print(f"📦 Stored Hash: {store_blockchain}")
 
+    # Get number of stored hashes from blockchain
+    total_hashes = Contract.functions.hashCount().call()
+    print(f"🔍 Total Hashes on Blockchain: {total_hashes}")
     if total_hashes == 0:
         print("❌ No hashes stored on the blockchain yet.")
         return False
 
     # Iterate and compare stored hashes
     for index in range(total_hashes):
-        stored_hash = contract.functions.getHash(index).call()
+        stored_hash = Contract.functions.getHash(index).call()
         print(f"📦 Stored Hash {index}: {stored_hash}")
 
         if current_hash == stored_hash:
@@ -177,9 +179,9 @@ class DocumentVerificationApp:
         for file_path in self.file_paths:
             try:
                 if verify_document(file_path):
-                    self.output_text.insert(END, f"{file_path}: Authentic\n")
+                    self.output_text.insert(END, f"{file_path}: Document Is Authentic ✅\n")
                 else:
-                    self.output_text.insert(END, f"{file_path}: Not Authentic\n")
+                    self.output_text.insert(END, f"{file_path}: Document Is Not Authentic ❌\n")
             except Exception as e:
                 self.output_text.insert(END, f"{file_path}: Error - {str(e)}\n")
 
