@@ -10,6 +10,6 @@ npx hardhat test
 REPORT_GAS=true npx hardhat test
 npx hardhat compile
 npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
+npx hardhat run --network localhost scripts/deploy.js   
 python app.py
 ```

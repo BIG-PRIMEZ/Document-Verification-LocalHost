@@ -12,9 +12,9 @@ with open("artifacts/contracts/DocumentVerification.sol/DocumentVerification.jso
 
 # Blockchain configuration
 local_node_url = "http://127.0.0.1:8545"  # Local node URL
-contract_address = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"  # Replace with your contract address
-private_key = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"  # Replace with your private key
-account_address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"  # Replace with your account address
+contract_address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"  # Replace with your contract address
+private_key = "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e"  # Replace with your private key
+account_address = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"  # Replace with your account address
 
 # Connect to the Ethereum node
 web3 = Web3(Web3.HTTPProvider(local_node_url))
@@ -151,7 +151,7 @@ class DocumentVerificationApp:
         self.output_label = Label(root, text="Output:", font=("Arial", 12))
         self.output_label.pack(pady=10)
 
-        self.output_text = Text(root, height=10, width=80)
+        self.output_text = Text(root, height=20, width=90)
         self.output_text.pack(pady=10)
 
         self.scrollbar = Scrollbar(root, command=self.output_text.yview)
@@ -176,14 +176,34 @@ class DocumentVerificationApp:
             return
 
         self.output_text.insert(END, "Verification Results:\n")
+        
         for file_path in self.file_paths:
             try:
-                if verify_document(file_path):
-                    self.output_text.insert(END, f"{file_path}: Document Is Authentic ✅\n")
+                # Extract text
+                if file_path.lower().endswith((".png", ".jpg", ".jpeg", ".bmp")):
+                    extracted_text = extract_text_from_image(file_path)
+                elif file_path.lower().endswith(".pdf"):
+                    extracted_text = extract_text_from_pdf(file_path)
                 else:
-                    self.output_text.insert(END, f"{file_path}: Document Is Not Authentic ❌\n")
+                    self.output_text.insert(END, f"{file_path}: ❌ Unsupported file format\n")
+                    continue
+
+                if not extracted_text.strip():
+                    self.output_text.insert(END, f"{file_path}: ❌ No text found\n")
+                    continue
+
+                # Show extracted text in GUI
+                self.output_text.insert(END, f"\n📄 Extracted Text from {file_path}:\n{extracted_text}\n\n")
+                
+                # Perform document verification
+                if verify_document(file_path):
+                    self.output_text.insert(END, f"{file_path}: ✅ Document Is Authentic\n\n")
+                else:
+                    self.output_text.insert(END, f"{file_path}: ❌ Document Is Not Authentic\n\n")
+
             except Exception as e:
-                self.output_text.insert(END, f"{file_path}: Error - {str(e)}\n")
+                self.output_text.insert(END, f"{file_path}: ❌ Error - {str(e)}\n")
+
 
 # Run the Application
 if __name__ == "__main__":
