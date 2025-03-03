@@ -10,6 +10,6 @@ npx hardhat test
 REPORT_GAS=true npx hardhat test
 npx hardhat compile
 npx hardhat node
-npx hardhat run --network localhost scripts/deploy.js   
+npx hardhat run --network localhost scripts/deploy.js   #Run on a new terminal
 python app.py
 ```
