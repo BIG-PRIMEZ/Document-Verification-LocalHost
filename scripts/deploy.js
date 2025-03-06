@@ -1,8 +1,8 @@
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
   // Get the contract factory
-  const DocumentVerification = await hre.ethers.getContractFactory("DocumentVerification");
+  const DocumentVerification = await ethers.getContractFactory("DocumentVerification");
 
   // Deploy the contract
   const documentVerification = await DocumentVerification.deploy();
