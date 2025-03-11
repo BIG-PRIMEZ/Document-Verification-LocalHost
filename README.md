@@ -8,6 +8,8 @@ Try running some of the following tasks:
 npx hardhat help
 npx hardhat test
 REPORT_GAS=true npx hardhat test
+npm install --save-dev hardhat
+npx hardhat #If creating a new project 
 npx hardhat compile
 npx hardhat node
 npx hardhat run --network localhost scripts/deploy.js   #Run on a new terminal

@@ -58,7 +58,7 @@ def store_hash_on_blockchain(hash_value):
     print(f"📝 Storing Hash: {hash_value}")  # Debug print
 
     txn = Contract.functions.storeHash(hash_value).build_transaction({
-        "chainId": 1337,  # Hardhat network
+        "chainId": 31337,  # Hardhat network
         "gas": 2000000,
         "gasPrice": web3.to_wei("50", "gwei"),
         "nonce": nonce,
